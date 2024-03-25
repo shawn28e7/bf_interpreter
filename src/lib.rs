@@ -15,35 +15,52 @@ pub fn read_code(file_path: &String) -> Result<String, Box<dyn Error>>
     return Ok(contents);
 }
 
-pub fn check_n_format_code(code: &String) -> Result<Vec<i32>, &'static str>
+#[derive(PartialEq, Debug)]
+pub enum Status
 {
-    let vaild_code = String::from("<>[]+-.");
-    let mut results: Vec<i32> = Vec::new();
-    for i in code.chars()
+    MoveLeft,
+    MoveRight,
+    LoopLeft,
+    LoopRight,
+    Add,
+    Sub,
+    Output,
+}
+pub fn check_n_format_code(code: &String) -> Result<Vec<Status>, &'static str>
+{
+    let vaild_code = String::from("<>[]+-.# \n");
+    let code = code.lines();
+    let mut results: Vec<Status> = Vec::new();
+    for lines in code
     {
-        if !vaild_code.contains(i)
+        for i in lines.chars()
         {
-            return Err("invaild code");
-        }
-        else
-        {
-            results.push(match i
+            if !vaild_code.contains(i)
             {
-                '>' => 1,
-                '<' => 2,
-                '[' => 3,
-                ']' => 4,
-                '+' => 5,
-                '-' => 6,
-                '.' => 7,
-                _ => return Err("?"),
-            });
+                return Err("invaild code");
+            }
+            else
+            {
+                results.push(match i
+                {
+                    '<' => Status::MoveLeft,
+                    '>' => Status::MoveRight,
+                    '[' => Status::LoopLeft,
+                    ']' => Status::LoopRight,
+                    '+' => Status::Add,
+                    '-' => Status::Sub,
+                    '.' => Status::Output,
+                    '#' => break,
+                    ' ' | '\n' => continue,
+                    _ => return Err("?"),
+                });
+            }
         }
     }
     Ok(results)
 }
 
-pub fn run(code: &Vec<i32>) -> Result<(), &'static str>
+pub fn run(code: &Vec<Status>) -> Result<(), &'static str>
 {
     let mut arr: Vec<u8> = vec![0];
     let mut ptr: usize = 0;
@@ -52,7 +69,7 @@ pub fn run(code: &Vec<i32>) -> Result<(), &'static str>
     {
         match &code[i]
         {
-            1 =>
+            Status::MoveRight =>
             {
                 if ptr + 1 < arr.len()
                 {
@@ -64,9 +81,9 @@ pub fn run(code: &Vec<i32>) -> Result<(), &'static str>
                     ptr += 1;
                 }
             }
-            2 =>
+            Status::MoveLeft =>
             {
-                if ptr > 0
+                if ptr != 0
                 {
                     ptr -= 1
                 }
@@ -75,11 +92,11 @@ pub fn run(code: &Vec<i32>) -> Result<(), &'static str>
                     return Err("out of bound");
                 }
             }
-            3 =>
+            Status::LoopLeft =>
             {
                 if arr[ptr] == 0
                 {
-                    while code[i] != 4
+                    while code[i] != Status::LoopRight
                     {
                         i += 1;
                         if i > code.len()
@@ -89,11 +106,11 @@ pub fn run(code: &Vec<i32>) -> Result<(), &'static str>
                     }
                 }
             }
-            4 =>
+            Status::LoopRight =>
             {
                 if arr[ptr] != 0
                 {
-                    while code[i] != 3
+                    while code[i] != Status::LoopLeft
                     {
                         if i <= 0
                         {
@@ -103,10 +120,9 @@ pub fn run(code: &Vec<i32>) -> Result<(), &'static str>
                     }
                 }
             }
-            5 => arr[ptr] += 1,
-            6 => arr[ptr] -= 1,
-            7 => print!("{}", arr[ptr] as char),
-            _ => return Err("WTF"),
+            Status::Add => arr[ptr] += 1,
+            Status::Sub => arr[ptr] -= 1,
+            Status::Output => print!("{}", arr[ptr] as char),
         }
         i += 1;
     }
