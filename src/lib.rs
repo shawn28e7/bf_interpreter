@@ -1,12 +1,16 @@
 use std::{error::Error, fs};
 
-pub fn strip_args(args: &Vec<String>) -> Result<String, &'static str>
+pub fn strip_args(mut args: impl Iterator<Item = String>) -> Result<String, &'static str>
 {
-    if args.len() < 2
+    args.next();
+
+    let file_path = match args.next()
     {
-        return Err("not enough arguments");
-    }
-    return Ok(args[1].clone());
+        Some(args) => args,
+        None => return Err("unable to get file"),
+    };
+
+    return Ok(file_path);
 }
 
 pub fn read_code(file_path: &String) -> Result<String, Box<dyn Error>>
@@ -52,7 +56,7 @@ pub fn check_n_format_code(code: &String) -> Result<Vec<Status>, &'static str>
                     '.' => Status::Output,
                     '#' => break,
                     ' ' | '\n' => continue,
-                    _ => return Err("?"),
+                    _ => return Err("unexpected error"),
                 });
             }
         }

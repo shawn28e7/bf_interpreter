@@ -3,9 +3,7 @@ use std::{env, process};
 
 fn main()
 {
-    let args: Vec<String> = env::args().collect();
-
-    let file_path: String = bf_interpreter::strip_args(&args).unwrap_or_else(|err| {
+    let file_path: String = bf_interpreter::strip_args(env::args()).unwrap_or_else(|err| {
         eprintln!("{err}");
         process::exit(1);
     });
