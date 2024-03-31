@@ -33,9 +33,8 @@ pub enum Status
 pub fn check_n_format_code(code: &String) -> Result<Vec<Status>, &'static str>
 {
     let vaild_code = String::from("<>[]+-.# \n");
-    let code = code.lines();
     let mut results: Vec<Status> = Vec::new();
-    for lines in code
+    for lines in code.lines()
     {
         for i in lines.chars()
         {
@@ -75,15 +74,11 @@ pub fn run(code: &Vec<Status>) -> Result<(), &'static str>
         {
             Status::MoveRight =>
             {
-                if ptr + 1 < arr.len()
-                {
-                    ptr += 1
-                }
-                else
+                if ptr + 1 >= arr.len()
                 {
                     arr.push(0);
-                    ptr += 1;
                 }
+                ptr += 1;
             }
             Status::MoveLeft =>
             {
